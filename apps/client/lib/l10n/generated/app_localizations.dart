@@ -233,7 +233,7 @@ abstract class AppLocalizations {
   /// No description provided for @setupUrlHint.
   ///
   /// In en, this message translates to:
-  /// **'https://192.168.1.10:8443'**
+  /// **'https://192.168.1.10:8444'**
   String get setupUrlHint;
 
   /// No description provided for @setupNameLabel.

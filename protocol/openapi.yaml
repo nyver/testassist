@@ -16,7 +16,7 @@ servers:
       host:
         default: localhost
       port:
-        default: "8443"
+        default: "8444"
 security:
   - bearerAuth: []
 paths:

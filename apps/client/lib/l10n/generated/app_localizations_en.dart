@@ -77,7 +77,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get setupUrlLabel => 'Server address';
 
   @override
-  String get setupUrlHint => 'https://192.168.1.10:8443';
+  String get setupUrlHint => 'https://192.168.1.10:8444';
 
   @override
   String get setupNameLabel => 'Name';

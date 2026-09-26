@@ -27,5 +27,5 @@ COPY --from=build --chown=65532:65532 /out/data /data
 COPY --from=build --chown=65532:65532 /out/certs /certs
 
 USER 65532:65532
-EXPOSE 8443
+EXPOSE 8444
 ENTRYPOINT ["/server"]

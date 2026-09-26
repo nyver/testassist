@@ -22,13 +22,13 @@ services:
     image: test-assistant-server:${APP_VERSION:-dev}
     restart: unless-stopped
     ports:
-      - "8443:8443"
+      - "8444:8444"
     environment:
       # Provider keys come from .env or the shell. An empty key disables the provider.
       OPENROUTER_API_KEY: ${OPENROUTER_API_KEY:-}
       ROUTERAI_API_KEY: ${ROUTERAI_API_KEY:-}
       SERVER_NAME: ${SERVER_NAME:-Test Assistant}
-      APP_LISTEN_ADDR: ":8443"
+      APP_LISTEN_ADDR: ":8444"
     volumes:
       # Persistent state: server.json and auth.json (data), the TLS
       # certificate and key (certs). Both must be writable by UID 65532.

@@ -667,7 +667,7 @@ SHA-256(DER certificate)
 ```text
 Новый сервер
 
-https://192.168.1.10:8443
+https://192.168.1.10:8444
 
 SHA-256 fingerprint
 
@@ -727,7 +727,7 @@ badCertificateCallback = (...) => true;
 При запуске сервер выводит:
 
 ```text
-HTTPS listening on :8443
+HTTPS listening on :8444
 
 Certificate SHA-256 fingerprint:
 A3:41:9C:7F:38:0B:21:EF:...
@@ -774,10 +774,10 @@ Flutter-клиент может хранить несколько серверо
 
 ```text
 Домашний
-https://192.168.1.15:8443
+https://192.168.1.15:8444
 
 VPS
-https://test.example.com:8443
+https://test.example.com:8444
 ```
 
 Для каждого сервера отдельно хранятся:
@@ -899,14 +899,14 @@ services:
     restart: unless-stopped
 
     ports:
-      - "8443:8443"
+      - "8444:8444"
 
     volumes:
       - ./data:/data
       - ./certs:/certs
 
     environment:
-      APP_LISTEN_ADDR: ":8443"
+      APP_LISTEN_ADDR: ":8444"
 
       TLS_CERT_FILE: /certs/server.crt
       TLS_KEY_FILE: /certs/server.key
@@ -924,7 +924,7 @@ services:
 ```yaml
 server:
   name: Home Test Assistant
-  listen: :8443
+  listen: :8444
 
 storage:
   data_dir: /data

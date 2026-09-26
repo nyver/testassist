@@ -24,7 +24,7 @@ server:
   # self-signed certificate is generated.
   name: "Test Assistant"
   # HTTPS listen address. There is no plaintext listener.
-  listen: ":8443"
+  listen: ":8444"
   # Directory for server.json (identity) and auth.json (API token).
   data_dir: /data
 
