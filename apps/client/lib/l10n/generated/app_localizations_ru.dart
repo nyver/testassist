@@ -370,6 +370,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get resultTitle => 'Ответ';
 
   @override
+  String get resultOptions => 'Варианты ответа';
+
+  @override
   String get resultCorrectOptions => 'Правильный ответ';
 
   @override

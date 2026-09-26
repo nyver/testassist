@@ -370,6 +370,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get resultTitle => 'Answer';
 
   @override
+  String get resultOptions => 'Answer options';
+
+  @override
   String get resultCorrectOptions => 'Correct answer';
 
   @override

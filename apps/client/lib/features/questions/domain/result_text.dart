@@ -24,12 +24,19 @@ String displayQuestion(AppLocalizations l10n, HistoryEntry entry) =>
 String optionLabel((String, String) option) =>
     option.$2.isEmpty ? option.$1 : '${option.$1}. ${option.$2}';
 
-/// Plain text for Copy and Share: the question, the correct option(s) and the
-/// explanation.
+/// Plain text for Copy and Share: the question, all options, the correct
+/// option(s) and the explanation.
 String composeShareText(AppLocalizations l10n, HistoryEntry entry) {
   final result = entry.result;
   final buffer = StringBuffer()
     ..writeln('${l10n.resultShareQuestion}: ${displayQuestion(l10n, entry)}');
+
+  if (entry.options.isNotEmpty) {
+    buffer.writeln('${l10n.resultOptions}:');
+    for (final option in entry.options) {
+      buffer.writeln(optionLabel((option.id, option.text)));
+    }
+  }
 
   if (result.isUncertain) {
     buffer.writeln('${l10n.resultShareAnswer}: ${l10n.resultUncertain}');

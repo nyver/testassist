@@ -153,6 +153,82 @@ class _ResultScreenState extends ConsumerState<ResultScreen> {
   }
 }
 
+/// Every option of the question, with the correct ones marked.
+class _OptionsList extends StatelessWidget {
+  const _OptionsList({required this.options, required this.correctIds});
+
+  final List<OptionItem> options;
+  final Set<String> correctIds;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+
+    return Column(
+      key: const Key('options-list'),
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(context.l10n.resultOptions, style: theme.textTheme.labelLarge),
+        const SizedBox(height: 8),
+        for (final option in options)
+          Builder(
+            builder: (context) {
+              final correct = correctIds.contains(option.id);
+              return Container(
+                key: Key('option-${option.id}'),
+                margin: const EdgeInsets.only(bottom: 6),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 10,
+                ),
+                decoration: BoxDecoration(
+                  color: correct ? scheme.primaryContainer : null,
+                  border: Border.all(
+                    color: correct ? scheme.primary : scheme.outlineVariant,
+                    width: correct ? 2 : 1,
+                  ),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Icon(
+                      correct
+                          ? Icons.check_circle
+                          : Icons.radio_button_unchecked,
+                      key: correct ? Key('option-correct-${option.id}') : null,
+                      size: 20,
+                      color: correct ? scheme.primary : scheme.outline,
+                    ),
+                    const SizedBox(width: 10),
+                    // The id and the text are separate widgets so that the
+                    // "id. text" label of the answer card stays unique.
+                    Text(
+                      option.id,
+                      style: theme.textTheme.bodyLarge?.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        option.text,
+                        style: theme.textTheme.bodyLarge?.copyWith(
+                          fontWeight: correct ? FontWeight.w600 : null,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+      ],
+    );
+  }
+}
+
 class _ResultBody extends ConsumerWidget {
   const _ResultBody({
     required this.entry,
@@ -215,6 +291,15 @@ class _ResultBody extends ConsumerWidget {
                   constraints: const BoxConstraints(maxHeight: 200),
                   child: Image.file(File(image.path), fit: BoxFit.contain),
                 ),
+              ),
+            ],
+            if (entry.options.isNotEmpty) ...[
+              const SizedBox(height: 16),
+              _OptionsList(
+                options: entry.options,
+                correctIds: result.isUncertain
+                    ? const {}
+                    : result.correctOptionIds.toSet(),
               ),
             ],
             const SizedBox(height: 16),

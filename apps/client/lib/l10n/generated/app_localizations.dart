@@ -764,6 +764,12 @@ abstract class AppLocalizations {
   /// **'Answer'**
   String get resultTitle;
 
+  /// No description provided for @resultOptions.
+  ///
+  /// In en, this message translates to:
+  /// **'Answer options'**
+  String get resultOptions;
+
   /// No description provided for @resultCorrectOptions.
   ///
   /// In en, this message translates to:

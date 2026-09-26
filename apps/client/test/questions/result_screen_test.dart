@@ -132,6 +132,70 @@ void main() {
     expect(find.text('C. TLS'), findsOneWidget);
   });
 
+  group('the options', () {
+    testWidgets('all options are shown and only the correct one is marked', (
+      tester,
+    ) async {
+      await harness();
+      await openResult(tester, entry());
+
+      expect(find.byKey(const Key('options-list')), findsOneWidget);
+      for (final option in optionsAbcd) {
+        expect(find.byKey(Key('option-${option.id}')), findsOneWidget);
+        expect(find.text(option.text), findsWidgets);
+      }
+      expect(find.byKey(const Key('option-correct-B')), findsOneWidget);
+      expect(find.byKey(const Key('option-correct-A')), findsNothing);
+      expect(find.byKey(const Key('option-correct-C')), findsNothing);
+      expect(find.byKey(const Key('option-correct-D')), findsNothing);
+    });
+
+    testWidgets('several correct options are all marked', (tester) async {
+      await harness();
+      await openResult(
+        tester,
+        entry(
+          result: answeredResult(
+            ids: const ['A', 'C'],
+            answerText: 'HTTP; TLS',
+          ),
+        ),
+      );
+
+      expect(find.byKey(const Key('option-correct-A')), findsOneWidget);
+      expect(find.byKey(const Key('option-correct-C')), findsOneWidget);
+      expect(find.byKey(const Key('option-correct-B')), findsNothing);
+    });
+
+    testWidgets('an uncertain result marks no option', (tester) async {
+      await harness();
+      await openResult(tester, entry(result: uncertainResult()));
+
+      expect(find.byKey(const Key('option-A')), findsOneWidget);
+      expect(find.byIcon(Icons.check_circle), findsNothing);
+    });
+
+    testWidgets('no list is shown when there are no options', (tester) async {
+      await harness();
+      await openResult(
+        tester,
+        entry(options: const [], result: uncertainResult()),
+      );
+
+      expect(find.byKey(const Key('options-list')), findsNothing);
+    });
+
+    testWidgets('the options survive in the history entry', (tester) async {
+      await harness();
+      await openResult(tester, entry());
+
+      final saved = h.history.entries.single;
+      expect(saved.options, optionsAbcd);
+      expect(saved.questionText, 'Which protocol encrypts web traffic?');
+      expect(saved.result.explanation, isNotEmpty);
+    });
+  });
+
   testWidgets('an uncertain result says so and lists the warnings', (
     tester,
   ) async {
@@ -196,6 +260,9 @@ void main() {
         copied,
         contains('Question: Which protocol encrypts web traffic?'),
       );
+      expect(copied, contains('Answer options:'));
+      expect(copied, contains('A. HTTP'));
+      expect(copied, contains('D. SSH'));
       expect(copied, contains('Answer: B. HTTPS'));
       expect(copied, contains('Explanation: HTTPS wraps HTTP in TLS.'));
       expect(find.text('Copied to clipboard.'), findsOneWidget);

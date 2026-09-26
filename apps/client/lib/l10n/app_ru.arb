@@ -132,6 +132,7 @@
   "modelNoneAvailable": "Нет доступных моделей.",
 
   "resultTitle": "Ответ",
+  "resultOptions": "Варианты ответа",
   "resultCorrectOptions": "Правильный ответ",
   "resultExplanation": "Пояснение",
   "resultDetails": "Подробности",

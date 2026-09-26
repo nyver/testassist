@@ -132,6 +132,7 @@
   "modelNoneAvailable": "No models available.",
 
   "resultTitle": "Answer",
+  "resultOptions": "Answer options",
   "resultCorrectOptions": "Correct answer",
   "resultExplanation": "Explanation",
   "resultDetails": "Details",
