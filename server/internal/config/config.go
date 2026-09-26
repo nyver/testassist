@@ -132,7 +132,7 @@ func Default() Config {
 	return Config{
 		Server: ServerConfig{
 			Name:    "Test Assistant",
-			Listen:  ":8444",
+			Listen:  ":8447",
 			DataDir: "/data",
 		},
 		TLS: TLSConfig{

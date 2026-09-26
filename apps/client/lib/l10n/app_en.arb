@@ -25,7 +25,7 @@
   "setupTitle": "Connect to server",
   "setupIntro": "Enter the address and token of your Test Assistant server.",
   "setupUrlLabel": "Server address",
-  "setupUrlHint": "https://192.168.1.10:8444",
+  "setupUrlHint": "https://192.168.1.10:8447",
   "setupNameLabel": "Name",
   "setupTokenLabel": "Token",
   "setupConnect": "Connect",

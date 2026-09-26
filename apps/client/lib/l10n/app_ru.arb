@@ -25,7 +25,7 @@
   "setupTitle": "Подключение к серверу",
   "setupIntro": "Введите адрес и токен вашего сервера Test Assistant.",
   "setupUrlLabel": "Адрес сервера",
-  "setupUrlHint": "https://192.168.1.10:8444",
+  "setupUrlHint": "https://192.168.1.10:8447",
   "setupNameLabel": "Название",
   "setupTokenLabel": "Токен",
   "setupConnect": "Подключиться",

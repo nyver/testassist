@@ -79,7 +79,7 @@ Server commands: `serve` (default), `certificate fingerprint`, `token show`, `to
 ## Pair the phone
 
 1. Install the app (see [Building](#building)) and open it. It asks for the server.
-2. Enter the address (`https://192.168.1.10:8444`), a name and the token from `token show`. Only `https://` is accepted.
+2. Enter the address (`https://192.168.1.10:8447`), a name and the token from `token show`. Only `https://` is accepted.
 3. If the certificate is not issued by a public authority, the app shows its SHA-256 fingerprint. **Compare it with the fingerprint printed by the server**, then tap **Trust**. From then on the app accepts only that certificate for that address, even if another certificate would be valid for a public CA.
 4. The main screen opens. Use **Take photo** or **Choose image**, crop the question, correct the recognized text if needed, choose a model and tap **Get answer**.
 
@@ -95,7 +95,7 @@ Precedence: built-in defaults, then an optional YAML file, then environment vari
 |---|---|
 | `OPENROUTER_API_KEY`, `ROUTERAI_API_KEY` | Provider keys. Each can also be given as `<NAME>_FILE` (path of a Docker secret). A provider without a key is disabled. |
 | `APP_CONFIG` | Path of the YAML file |
-| `APP_LISTEN_ADDR` | Listen address, default `:8444` |
+| `APP_LISTEN_ADDR` | Listen address, default `:8447` |
 | `DATA_DIR` | Directory for `server.json` and `auth.json` |
 | `TLS_CERT_FILE`, `TLS_KEY_FILE` | Certificate and key paths |
 | `SERVER_NAME` | Name shown in the app |

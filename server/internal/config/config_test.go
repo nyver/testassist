@@ -43,8 +43,8 @@ func TestLoadDefaultsWithoutFile(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Load: %v", err)
 	}
-	if got := cfg.Server.Listen; got != ":8444" {
-		t.Errorf("listen = %q, want :8444", got)
+	if got := cfg.Server.Listen; got != ":8447" {
+		t.Errorf("listen = %q, want :8447", got)
 	}
 	if cfg.Timeouts.Connect != 10*time.Second || cfg.Timeouts.Request != 60*time.Second || cfg.Timeouts.LLM != 45*time.Second {
 		t.Errorf("unexpected default timeouts: %+v", cfg.Timeouts)
@@ -356,7 +356,7 @@ func TestEmptyFileUsesDefaults(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Load: %v", err)
 	}
-	if cfg.Server.Listen != ":8444" {
+	if cfg.Server.Listen != ":8447" {
 		t.Errorf("listen = %q", cfg.Server.Listen)
 	}
 }
