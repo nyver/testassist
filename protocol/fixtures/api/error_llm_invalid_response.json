@@ -1,0 +1,7 @@
+{
+  "error": {
+    "code": "LLM_INVALID_RESPONSE",
+    "message": "The LLM returned an invalid response",
+    "requestId": "req-example-err"
+  }
+}

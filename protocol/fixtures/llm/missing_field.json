@@ -1,0 +1,26 @@
+{
+  "name": "missing_field",
+  "description": "The required \"confidence\" field is absent.",
+  "options": [
+    {
+      "id": "A",
+      "text": "HTTP"
+    },
+    {
+      "id": "B",
+      "text": "HTTPS"
+    },
+    {
+      "id": "C",
+      "text": "TLS"
+    },
+    {
+      "id": "D",
+      "text": "SSH"
+    }
+  ],
+  "raw": "{\"status\":\"answered\",\"correctOptionIds\":[\"B\"],\"explanation\":\"x\",\"details\":null,\"warnings\":[]}",
+  "expected": {
+    "errorCode": "LLM_INVALID_RESPONSE"
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "name": "invented_option",
+  "description": "Model returns an option id that is not in the request.",
+  "options": [
+    {
+      "id": "A",
+      "text": "HTTP"
+    },
+    {
+      "id": "B",
+      "text": "HTTPS"
+    },
+    {
+      "id": "C",
+      "text": "TLS"
+    },
+    {
+      "id": "D",
+      "text": "SSH"
+    }
+  ],
+  "raw": "{\"status\":\"answered\",\"correctOptionIds\":[\"E\"],\"explanation\":\"Short explanation.\",\"details\":null,\"confidence\":0.9,\"warnings\":[]}",
+  "expected": {
+    "errorCode": "LLM_INVALID_RESPONSE"
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "requestId": "req-example-3",
+  "status": "uncertain",
+  "correctOptionIds": [],
+  "answerText": null,
+  "explanation": null,
+  "details": null,
+  "confidence": 0.31,
+  "confidenceLevel": "low",
+  "warnings": ["Option C is not readable"],
+  "provider": "routerai",
+  "model": "openai/gpt-4o-mini"
+}

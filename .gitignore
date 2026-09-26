@@ -1,0 +1,26 @@
+*.doc
+*.docx
+AGENTS.md
+CLAUDE.md
+openspec/
+.history/
+.claude/
+.agents/
+.gigacode/
+.opencode/
+.qwen/
+config.yaml
+.env
+*.jks
+*.keystore
+key.properties
+android/local.properties
+build/
+.dart_tool/
+bin/
+dist/
+*.exe
+coverage/
+# Local runtime state created by Docker Compose (see docker/compose.yaml).
+/docker/data/
+/docker/certs/

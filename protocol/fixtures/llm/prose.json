@@ -1,0 +1,26 @@
+{
+  "name": "prose",
+  "description": "Plain prose instead of JSON.",
+  "options": [
+    {
+      "id": "A",
+      "text": "HTTP"
+    },
+    {
+      "id": "B",
+      "text": "HTTPS"
+    },
+    {
+      "id": "C",
+      "text": "TLS"
+    },
+    {
+      "id": "D",
+      "text": "SSH"
+    }
+  ],
+  "raw": "The correct answer is B, because HTTPS encrypts the traffic.",
+  "expected": {
+    "errorCode": "LLM_INVALID_RESPONSE"
+  }
+}

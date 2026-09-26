@@ -1,0 +1,7 @@
+{
+  "error": {
+    "code": "INVALID_REQUEST",
+    "message": "options must be a JSON array of 2 to 12 items",
+    "requestId": "req-example-err"
+  }
+}

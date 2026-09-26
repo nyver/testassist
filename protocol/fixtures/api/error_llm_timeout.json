@@ -1,0 +1,7 @@
+{
+  "error": {
+    "code": "LLM_TIMEOUT",
+    "message": "The LLM provider did not respond in time",
+    "requestId": "req-example-err"
+  }
+}

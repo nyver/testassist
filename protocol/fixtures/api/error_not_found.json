@@ -1,0 +1,7 @@
+{
+  "error": {
+    "code": "NOT_FOUND",
+    "message": "Not found.",
+    "requestId": "req-example-err"
+  }
+}

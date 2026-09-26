@@ -1,0 +1,33 @@
+{
+  "name": "valid",
+  "description": "Plain JSON object with a single correct option.",
+  "options": [
+    {
+      "id": "A",
+      "text": "HTTP"
+    },
+    {
+      "id": "B",
+      "text": "HTTPS"
+    },
+    {
+      "id": "C",
+      "text": "TLS"
+    },
+    {
+      "id": "D",
+      "text": "SSH"
+    }
+  ],
+  "raw": "{\"status\":\"answered\",\"correctOptionIds\":[\"B\"],\"explanation\":\"Short explanation.\",\"details\":null,\"confidence\":0.96,\"warnings\":[]}",
+  "expected": {
+    "status": "answered",
+    "correctOptionIds": [
+      "B"
+    ],
+    "answerText": "HTTPS",
+    "confidence": 0.96,
+    "confidenceLevel": "high",
+    "warnings": []
+  }
+}

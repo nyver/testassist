@@ -1,0 +1,26 @@
+{
+  "name": "answered_empty_ids",
+  "description": "Status \"answered\" with an empty correctOptionIds array.",
+  "options": [
+    {
+      "id": "A",
+      "text": "HTTP"
+    },
+    {
+      "id": "B",
+      "text": "HTTPS"
+    },
+    {
+      "id": "C",
+      "text": "TLS"
+    },
+    {
+      "id": "D",
+      "text": "SSH"
+    }
+  ],
+  "raw": "{\"status\":\"answered\",\"correctOptionIds\":[],\"explanation\":\"Short explanation.\",\"details\":null,\"confidence\":0.9,\"warnings\":[]}",
+  "expected": {
+    "errorCode": "LLM_INVALID_RESPONSE"
+  }
+}

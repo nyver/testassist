@@ -1,0 +1,33 @@
+{
+  "name": "code_fenced",
+  "description": "Valid JSON wrapped in a single ```json code fence.",
+  "options": [
+    {
+      "id": "A",
+      "text": "HTTP"
+    },
+    {
+      "id": "B",
+      "text": "HTTPS"
+    },
+    {
+      "id": "C",
+      "text": "TLS"
+    },
+    {
+      "id": "D",
+      "text": "SSH"
+    }
+  ],
+  "raw": "```json\n{\"status\":\"answered\",\"correctOptionIds\":[\"B\"],\"explanation\":\"Short explanation.\",\"details\":null,\"confidence\":0.96,\"warnings\":[]}\n```",
+  "expected": {
+    "status": "answered",
+    "correctOptionIds": [
+      "B"
+    ],
+    "answerText": "HTTPS",
+    "confidence": 0.96,
+    "confidenceLevel": "high",
+    "warnings": []
+  }
+}

@@ -1,0 +1,31 @@
+{
+  "name": "uncertain_no_warnings",
+  "description": "Uncertain answer without warnings; the server adds a generic warning.",
+  "options": [
+    {
+      "id": "A",
+      "text": "HTTP"
+    },
+    {
+      "id": "B",
+      "text": "HTTPS"
+    },
+    {
+      "id": "C",
+      "text": "TLS"
+    },
+    {
+      "id": "D",
+      "text": "SSH"
+    }
+  ],
+  "raw": "{\"status\":\"uncertain\",\"correctOptionIds\":[],\"explanation\":null,\"details\":null,\"confidence\":0.2,\"warnings\":[]}",
+  "expected": {
+    "status": "uncertain",
+    "correctOptionIds": [],
+    "answerText": null,
+    "confidence": 0.2,
+    "confidenceLevel": "low",
+    "warningsNotEmpty": true
+  }
+}

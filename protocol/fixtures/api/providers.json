@@ -1,0 +1,4 @@
+[
+  { "id": "openrouter", "name": "OpenRouter", "isDefault": true },
+  { "id": "routerai", "name": "RouterAI", "isDefault": false }
+]

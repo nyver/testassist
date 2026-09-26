@@ -1,0 +1,26 @@
+{
+  "name": "confidence_out_of_range",
+  "description": "Confidence above 1.0.",
+  "options": [
+    {
+      "id": "A",
+      "text": "HTTP"
+    },
+    {
+      "id": "B",
+      "text": "HTTPS"
+    },
+    {
+      "id": "C",
+      "text": "TLS"
+    },
+    {
+      "id": "D",
+      "text": "SSH"
+    }
+  ],
+  "raw": "{\"status\":\"answered\",\"correctOptionIds\":[\"B\"],\"explanation\":\"Short explanation.\",\"details\":null,\"confidence\":1.5,\"warnings\":[]}",
+  "expected": {
+    "errorCode": "LLM_INVALID_RESPONSE"
+  }
+}

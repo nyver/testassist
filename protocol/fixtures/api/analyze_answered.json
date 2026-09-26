@@ -1,0 +1,13 @@
+{
+  "requestId": "req-example-1",
+  "status": "answered",
+  "correctOptionIds": ["B"],
+  "answerText": "HTTPS",
+  "explanation": "HTTPS wraps HTTP in TLS, which encrypts and authenticates the traffic.",
+  "details": "HTTP alone sends data in plaintext, TLS is only a layer and SSH is a remote shell protocol.",
+  "confidence": 0.96,
+  "confidenceLevel": "high",
+  "warnings": [],
+  "provider": "openrouter",
+  "model": "openai/gpt-4o-mini"
+}

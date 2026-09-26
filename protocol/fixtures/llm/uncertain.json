@@ -1,0 +1,33 @@
+{
+  "name": "uncertain",
+  "description": "Uncertain answer with a model-provided warning.",
+  "options": [
+    {
+      "id": "A",
+      "text": "HTTP"
+    },
+    {
+      "id": "B",
+      "text": "HTTPS"
+    },
+    {
+      "id": "C",
+      "text": "TLS"
+    },
+    {
+      "id": "D",
+      "text": "SSH"
+    }
+  ],
+  "raw": "{\"status\":\"uncertain\",\"correctOptionIds\":[\"B\"],\"explanation\":null,\"details\":null,\"confidence\":0.31,\"warnings\":[\"Option C is not readable\"]}",
+  "expected": {
+    "status": "uncertain",
+    "correctOptionIds": [],
+    "answerText": null,
+    "confidence": 0.31,
+    "confidenceLevel": "low",
+    "warnings": [
+      "Option C is not readable"
+    ]
+  }
+}

@@ -1,0 +1,34 @@
+{
+  "name": "multi_answer",
+  "description": "Several correct options returned out of request order.",
+  "options": [
+    {
+      "id": "A",
+      "text": "HTTP"
+    },
+    {
+      "id": "B",
+      "text": "HTTPS"
+    },
+    {
+      "id": "C",
+      "text": "TLS"
+    },
+    {
+      "id": "D",
+      "text": "SSH"
+    }
+  ],
+  "raw": "{\"status\":\"answered\",\"correctOptionIds\":[\"C\",\"A\"],\"explanation\":\"Short explanation.\",\"details\":null,\"confidence\":0.72,\"warnings\":[]}",
+  "expected": {
+    "status": "answered",
+    "correctOptionIds": [
+      "C",
+      "A"
+    ],
+    "answerText": "HTTP; TLS",
+    "confidence": 0.72,
+    "confidenceLevel": "medium",
+    "warnings": []
+  }
+}

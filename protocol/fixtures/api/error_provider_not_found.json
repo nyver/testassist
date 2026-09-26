@@ -1,0 +1,7 @@
+{
+  "error": {
+    "code": "PROVIDER_NOT_FOUND",
+    "message": "Provider not found",
+    "requestId": "req-example-err"
+  }
+}

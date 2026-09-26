@@ -1,0 +1,13 @@
+{
+  "requestId": "req-example-2",
+  "status": "answered",
+  "correctOptionIds": ["A", "C"],
+  "answerText": "HTTP; TLS",
+  "explanation": "Both options are valid parts of a secure web stack.",
+  "details": null,
+  "confidence": 0.72,
+  "confidenceLevel": "medium",
+  "warnings": [],
+  "provider": "openrouter",
+  "model": "openai/gpt-4o-mini"
+}

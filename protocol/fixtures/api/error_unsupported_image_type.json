@@ -1,0 +1,7 @@
+{
+  "error": {
+    "code": "UNSUPPORTED_IMAGE_TYPE",
+    "message": "Only JPEG, PNG and WebP images are supported",
+    "requestId": "req-example-err"
+  }
+}

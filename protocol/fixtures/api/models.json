@@ -1,0 +1,14 @@
+[
+  {
+    "id": "openai/gpt-4o-mini",
+    "name": "GPT-4o mini",
+    "capabilities": { "text": true, "vision": true },
+    "isDefault": true
+  },
+  {
+    "id": "meta-llama/llama-3.1-8b-instruct",
+    "name": "Llama 3.1 8B Instruct",
+    "capabilities": { "text": true, "vision": false },
+    "isDefault": false
+  }
+]

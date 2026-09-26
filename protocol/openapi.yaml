@@ -1,0 +1,353 @@
+openapi: 3.0.3
+info:
+  title: Test Assistant API
+  version: 1.0.0
+  description: |
+    Wire contract between the Android client and the Go server.
+    All endpoints are served over HTTPS only. Every endpoint under `/api/v1/`
+    requires `Authorization: Bearer <token>` unless the operator disabled
+    authentication. Health endpoints never require authentication.
+
+    Shared JSON fixtures that must stay consistent with this document live in
+    `protocol/fixtures/`.
+servers:
+  - url: https://{host}:{port}
+    variables:
+      host:
+        default: localhost
+      port:
+        default: "8443"
+security:
+  - bearerAuth: []
+paths:
+  /api/v1/server/info:
+    get:
+      operationId: getServerInfo
+      summary: Server identity and build version
+      responses:
+        "200":
+          description: Server information.
+          headers:
+            X-Request-ID:
+              $ref: "#/components/headers/RequestId"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ServerInfo"
+        "401":
+          $ref: "#/components/responses/Error"
+        "429":
+          $ref: "#/components/responses/Error"
+  /api/v1/llm/providers:
+    get:
+      operationId: listProviders
+      summary: Enabled LLM providers
+      description: A provider without a configured API key is not listed.
+      responses:
+        "200":
+          description: Enabled providers; exactly one has `isDefault=true`.
+          headers:
+            X-Request-ID:
+              $ref: "#/components/headers/RequestId"
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Provider"
+        "401":
+          $ref: "#/components/responses/Error"
+        "429":
+          $ref: "#/components/responses/Error"
+  /api/v1/llm/models:
+    get:
+      operationId: listModels
+      summary: Models of one provider with capabilities
+      parameters:
+        - name: provider
+          in: query
+          required: false
+          description: Provider id. The default provider is used when omitted.
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Models of the provider.
+          headers:
+            X-Request-ID:
+              $ref: "#/components/headers/RequestId"
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Model"
+        "401":
+          $ref: "#/components/responses/Error"
+        "404":
+          $ref: "#/components/responses/Error"
+        "429":
+          $ref: "#/components/responses/Error"
+  /api/v1/questions/analyze:
+    post:
+      operationId: analyzeQuestion
+      summary: Analyze a multiple-choice question
+      description: |
+        The server never stores the question, options, image, prompt or model
+        output. An image is forwarded only to models with the `vision`
+        capability.
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: "#/components/schemas/AnalyzeRequest"
+            encoding:
+              image:
+                contentType: image/jpeg, image/png, image/webp
+      responses:
+        "200":
+          description: Validated analysis result.
+          headers:
+            X-Request-ID:
+              $ref: "#/components/headers/RequestId"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AnalyzeResponse"
+        "400":
+          $ref: "#/components/responses/Error"
+        "401":
+          $ref: "#/components/responses/Error"
+        "404":
+          $ref: "#/components/responses/Error"
+        "413":
+          $ref: "#/components/responses/Error"
+        "415":
+          $ref: "#/components/responses/Error"
+        "422":
+          $ref: "#/components/responses/Error"
+        "429":
+          $ref: "#/components/responses/Error"
+        "500":
+          $ref: "#/components/responses/Error"
+        "502":
+          $ref: "#/components/responses/Error"
+        "504":
+          $ref: "#/components/responses/Error"
+  /health/live:
+    get:
+      operationId: healthLive
+      summary: Liveness probe
+      security: []
+      responses:
+        "200":
+          description: The process is running.
+  /health/ready:
+    get:
+      operationId: healthReady
+      summary: Readiness probe
+      description: |
+        Succeeds only when configuration is valid, the data directory is
+        writable, a TLS certificate is loaded and at least one provider is
+        enabled. Never calls LLM providers.
+      security: []
+      responses:
+        "200":
+          description: Ready to serve.
+        "503":
+          description: Not ready.
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+  headers:
+    RequestId:
+      description: Request identifier, also present in error bodies and server logs.
+      schema:
+        type: string
+        maxLength: 64
+        pattern: "^[A-Za-z0-9_-]{1,64}$"
+    RetryAfter:
+      description: Seconds to wait before retrying.
+      schema:
+        type: integer
+        minimum: 1
+  responses:
+    Error:
+      description: |
+        Error envelope. Status to code mapping: 400 INVALID_REQUEST,
+        401 UNAUTHORIZED, 404 NOT_FOUND (unknown route), PROVIDER_NOT_FOUND or MODEL_NOT_FOUND,
+        413 IMAGE_TOO_LARGE, 415 UNSUPPORTED_IMAGE_TYPE,
+        422 MODEL_DOES_NOT_SUPPORT_VISION, 429 RATE_LIMITED,
+        500 INTERNAL_ERROR, 502 LLM_PROVIDER_UNAVAILABLE or LLM_INVALID_RESPONSE,
+        504 LLM_TIMEOUT.
+      headers:
+        X-Request-ID:
+          $ref: "#/components/headers/RequestId"
+        Retry-After:
+          $ref: "#/components/headers/RetryAfter"
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorEnvelope"
+  schemas:
+    ServerInfo:
+      type: object
+      required: [serverId, name, version]
+      properties:
+        serverId:
+          type: string
+          format: uuid
+        name:
+          type: string
+        version:
+          type: string
+    Provider:
+      type: object
+      required: [id, name, isDefault]
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        isDefault:
+          type: boolean
+    Capabilities:
+      type: object
+      required: [text, vision]
+      properties:
+        text:
+          type: boolean
+        vision:
+          type: boolean
+    Model:
+      type: object
+      required: [id, name, capabilities, isDefault]
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        capabilities:
+          $ref: "#/components/schemas/Capabilities"
+        isDefault:
+          type: boolean
+    Option:
+      type: object
+      required: [id, text]
+      properties:
+        id:
+          type: string
+          minLength: 1
+          maxLength: 8
+        text:
+          type: string
+          minLength: 1
+          maxLength: 1000
+    AnalyzeRequest:
+      type: object
+      required: [question, options]
+      properties:
+        question:
+          type: string
+          minLength: 1
+          maxLength: 4000
+          description: Length is counted in characters after trimming.
+        options:
+          type: string
+          description: |
+            JSON-encoded array of 2..12 `Option` objects with unique ids.
+          example: '[{"id":"A","text":"HTTP"},{"id":"B","text":"HTTPS"}]'
+        language:
+          type: string
+          default: en
+          description: BCP 47 tag of the explanation language.
+        provider:
+          type: string
+        model:
+          type: string
+        image:
+          type: string
+          format: binary
+          description: JPEG, PNG or WebP, at most 5 MiB by default. Type is sniffed from content.
+    AnalyzeResponse:
+      type: object
+      required:
+        - requestId
+        - status
+        - correctOptionIds
+        - answerText
+        - explanation
+        - details
+        - confidence
+        - confidenceLevel
+        - warnings
+        - provider
+        - model
+      properties:
+        requestId:
+          type: string
+        status:
+          type: string
+          enum: [answered, uncertain]
+        correctOptionIds:
+          type: array
+          items:
+            type: string
+        answerText:
+          type: string
+          nullable: true
+        explanation:
+          type: string
+          nullable: true
+        details:
+          type: string
+          nullable: true
+        confidence:
+          type: number
+          minimum: 0
+          maximum: 1
+        confidenceLevel:
+          type: string
+          enum: [high, medium, low]
+        warnings:
+          type: array
+          items:
+            type: string
+        provider:
+          type: string
+        model:
+          type: string
+    ErrorCode:
+      type: string
+      enum:
+        - INVALID_REQUEST
+        - UNAUTHORIZED
+        - NOT_FOUND
+        - PROVIDER_NOT_FOUND
+        - MODEL_NOT_FOUND
+        - IMAGE_TOO_LARGE
+        - UNSUPPORTED_IMAGE_TYPE
+        - MODEL_DOES_NOT_SUPPORT_VISION
+        - RATE_LIMITED
+        - INTERNAL_ERROR
+        - LLM_PROVIDER_UNAVAILABLE
+        - LLM_INVALID_RESPONSE
+        - LLM_TIMEOUT
+    ErrorEnvelope:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: object
+          required: [code, message, requestId]
+          properties:
+            code:
+              $ref: "#/components/schemas/ErrorCode"
+            message:
+              type: string
+              description: English, human-readable; never contains secrets or user content.
+            requestId:
+              type: string

@@ -1,0 +1,26 @@
+{
+  "name": "wrong_type",
+  "description": "correctOptionIds is a string instead of an array.",
+  "options": [
+    {
+      "id": "A",
+      "text": "HTTP"
+    },
+    {
+      "id": "B",
+      "text": "HTTPS"
+    },
+    {
+      "id": "C",
+      "text": "TLS"
+    },
+    {
+      "id": "D",
+      "text": "SSH"
+    }
+  ],
+  "raw": "{\"status\":\"answered\",\"correctOptionIds\":\"B\",\"explanation\":null,\"details\":null,\"confidence\":0.9,\"warnings\":[]}",
+  "expected": {
+    "errorCode": "LLM_INVALID_RESPONSE"
+  }
+}

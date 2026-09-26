@@ -1,0 +1,7 @@
+{
+  "error": {
+    "code": "LLM_PROVIDER_UNAVAILABLE",
+    "message": "The LLM provider is unavailable",
+    "requestId": "req-example-err"
+  }
+}

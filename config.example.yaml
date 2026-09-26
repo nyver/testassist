@@ -1,0 +1,136 @@
+# Test Assistant server configuration.
+#
+# Copy this file to config.yaml (which is git-ignored) and pass it with
+# `-config config.yaml` or APP_CONFIG=config.yaml. Every key is optional; the
+# values below are the built-in defaults.
+#
+# Precedence: built-in defaults < this file < environment variables.
+# Unknown keys are rejected at startup. Secrets never belong in this file:
+# provider API keys are read from environment variables (or from the file named
+# by <NAME>_FILE, for Docker secrets), and the API token is provisioned by the
+# server itself (see README).
+#
+# Environment overrides:
+#   APP_LISTEN_ADDR  -> server.listen
+#   DATA_DIR         -> server.data_dir
+#   SERVER_NAME      -> server.name
+#   TLS_CERT_FILE    -> tls.cert_file
+#   TLS_KEY_FILE     -> tls.key_file
+#   AUTH_TOKEN       -> API token (replaces the persisted one; AUTH_TOKEN_FILE also works)
+#   OPENROUTER_API_KEY, ROUTERAI_API_KEY -> provider keys (each has a *_FILE variant)
+
+server:
+  # Human-readable name shown in the client. Also the certificate CN when a
+  # self-signed certificate is generated.
+  name: "Test Assistant"
+  # HTTPS listen address. There is no plaintext listener.
+  listen: ":8443"
+  # Directory for server.json (identity) and auth.json (API token).
+  data_dir: /data
+
+tls:
+  # If both files exist they are used as-is (the first certificate in the file
+  # is the leaf). If neither exists, a self-signed ECDSA P-256 certificate is
+  # generated and saved here. If only one exists, the server refuses to start.
+  cert_file: /certs/server.crt
+  key_file: /certs/server.key
+  # Extra host names or IP addresses for the generated certificate, in
+  # addition to "localhost" and "127.0.0.1". List the address your phone uses.
+  # Only applies when the certificate is generated; delete both files and
+  # restart to regenerate it.
+  self_signed_hosts: []
+  # Example:
+  # self_signed_hosts:
+  #   - 192.168.1.10
+  #   - assistant.home.arpa
+
+security:
+  # Require "Authorization: Bearer <token>" on every /api/v1/ endpoint.
+  # Only disable this on a fully trusted private network.
+  auth_enabled: true
+
+timeouts:
+  connect: 10s      # dial timeout for upstream LLM connections
+  request: 60s      # upper bound for one API request
+  llm: 45s          # upper bound for one analysis call, retries included
+  read_header: 10s  # HTTP server: time to read request headers
+  read: 60s         # HTTP server: time to read the whole request
+  idle: 120s        # HTTP server: keep-alive idle timeout
+  shutdown: 30s     # graceful shutdown budget on SIGINT/SIGTERM
+
+limits:
+  max_request_bytes: 8388608   # 8 MiB, whole request body
+  max_image_bytes: 5242880     # 5 MiB, uploaded image (must not exceed max_request_bytes)
+
+# Per-client-IP token buckets for /api/v1/ endpoints.
+rate_limit:
+  general:
+    requests_per_minute: 30
+    burst: 10
+  analyze:
+    requests_per_minute: 10
+    burst: 3
+
+# Mapping of the model's numeric confidence to the level shown to the user:
+# >= high is "high", >= medium is "medium", anything else is "low".
+# high must be greater than medium; both must be within 0.0..1.0.
+confidence:
+  high: 0.85
+  medium: 0.60
+
+llm:
+  # Provider used when a request does not name one. If it has no API key the
+  # first enabled provider is used instead.
+  default_provider: openrouter
+  # Maximum tokens the model may generate for one answer.
+  max_tokens: 1024
+  # Maximum size of an upstream LLM response body that the server will read.
+  max_upstream_body_bytes: 1048576   # 1 MiB
+  # How long a provider's model list is cached in memory.
+  models_cache_ttl: 10m
+
+  # Providers are merged with the built-in ones by id: an entry with the id
+  # "openrouter" or "routerai" overrides only the fields you set, any other id
+  # adds a new provider. A provider with `api_key_env` is enabled only when that
+  # environment variable (or <NAME>_FILE) holds a key; a provider without
+  # `api_key_env` needs no key (for example a local Ollama).
+  #
+  # Built-in defaults:
+  providers:
+    - id: openrouter
+      name: OpenRouter
+      type: openai-compatible          # the only supported type
+      base_url: https://openrouter.ai/api/v1
+      api_key_env: OPENROUTER_API_KEY  # NAME of the variable, never the key itself
+      headers:                         # extra HTTP headers sent upstream
+        X-Title: Test Assistant
+      default_model: openai/gpt-4o-mini
+      # Request a structured response format: none | json_object | json_schema.
+      # Not every model supports it; the server validates answers strictly either way.
+      structured_output: none
+      # Static models are merged with the provider's own /models listing, take
+      # precedence over it, and are served if the listing is unavailable.
+      # `text` and `vision` left out keep the provider-reported value.
+      models: []
+    - id: routerai
+      name: RouterAI
+      type: openai-compatible
+      base_url: https://routerai.ru/api/v1
+      api_key_env: ROUTERAI_API_KEY
+      # NOTE: verify this model id against the RouterAI catalog.
+      default_model: openai/gpt-4o-mini
+      structured_output: none
+      models: []
+
+    # Example: a custom OpenAI-compatible provider (no code changes needed).
+    # - id: local
+    #   name: Local Ollama
+    #   type: openai-compatible
+    #   base_url: http://ollama:11434/v1
+    #   default_model: llama3.2-vision
+    #   models:
+    #     - id: llama3.2-vision
+    #       name: Llama 3.2 Vision
+    #       text: true
+    #       vision: true
+    #       structured_output: json_object

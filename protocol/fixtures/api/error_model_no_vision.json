@@ -1,0 +1,7 @@
+{
+  "error": {
+    "code": "MODEL_DOES_NOT_SUPPORT_VISION",
+    "message": "The selected model does not support image input",
+    "requestId": "req-example-err"
+  }
+}
