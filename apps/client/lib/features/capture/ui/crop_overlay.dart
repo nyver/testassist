@@ -1,3 +1,4 @@
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 
 /// Which part of the selection a drag started on.
@@ -37,6 +38,11 @@ class CropOverlayState extends State<CropOverlay> {
   /// How close a touch must be to a corner to grab it.
   static const _grabRadius = 36.0;
 
+  /// Touch-sensitive margin around the image. The corner handles sit on the
+  /// image border, so without it the outer half of a handle could not be
+  /// grabbed.
+  static const _margin = 28.0;
+
   late Rect _rect = widget.initial;
   _Handle? _active;
 
@@ -52,33 +58,52 @@ class CropOverlayState extends State<CropOverlay> {
   @override
   Widget build(BuildContext context) {
     return Center(
-      child: AspectRatio(
-        aspectRatio: widget.imageAspectRatio,
-        child: LayoutBuilder(
-          builder: (context, constraints) {
-            final size = constraints.biggest;
-            return GestureDetector(
-              behavior: HitTestBehavior.opaque,
-              onPanStart: (d) => _start(d.localPosition, size),
-              onPanUpdate: (d) => _update(d.delta, size),
-              onPanEnd: (_) => _active = null,
-              onPanCancel: () => _active = null,
-              child: Stack(
-                fit: StackFit.expand,
-                children: [
-                  Image(image: widget.image, fit: BoxFit.fill),
-                  CustomPaint(
-                    painter: _CropPainter(
-                      rect: _rect,
-                      scrim: Colors.black54,
-                      line: Theme.of(context).colorScheme.primary,
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          // The image fits into what is left after the touch margin.
+          final available = Size(
+            constraints.maxWidth - 2 * _margin,
+            constraints.maxHeight - 2 * _margin,
+          );
+          final size = applyBoxFit(
+            BoxFit.contain,
+            Size(widget.imageAspectRatio, 1),
+            available,
+          ).destination;
+          const margin = Offset(_margin, _margin);
+          return GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            // The handle is chosen where the finger went down. A pan only
+            // starts after the finger moved some distance, and by then it is
+            // no longer on the handle.
+            dragStartBehavior: DragStartBehavior.down,
+            onPanDown: (d) => _start(d.localPosition - margin, size),
+            onPanUpdate: (d) => _update(d.delta, size),
+            onPanEnd: (_) => _active = null,
+            onPanCancel: () => _active = null,
+            child: Padding(
+              padding: const EdgeInsets.all(_margin),
+              child: SizedBox.fromSize(
+                key: const Key('crop-image'),
+                size: size,
+                child: Stack(
+                  fit: StackFit.expand,
+                  clipBehavior: Clip.none,
+                  children: [
+                    Image(image: widget.image, fit: BoxFit.fill),
+                    CustomPaint(
+                      painter: _CropPainter(
+                        rect: _rect,
+                        scrim: Colors.black54,
+                        line: Theme.of(context).colorScheme.primary,
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            );
-          },
-        ),
+            ),
+          );
+        },
       ),
     );
   }

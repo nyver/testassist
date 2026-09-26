@@ -209,16 +209,18 @@ void main() {
       expect(key.currentState!.selection, const Rect.fromLTRB(0, 0, 1, 1));
     });
 
+    Rect imageRect(WidgetTester tester) =>
+        tester.getRect(find.byKey(const Key('crop-image')));
+
     testWidgets('dragging a corner resizes the selection', (tester) async {
       final changes = <Rect>[];
       final key = await pumpOverlay(tester, changes);
-      final topLeft = tester.getTopLeft(find.byType(CropOverlay));
+      final image = imageRect(tester);
 
       // Grab the bottom-right corner and drag it up and to the left.
-      final bottomRight = topLeft + const Offset(400, 400);
       await tester.dragFrom(
-        bottomRight - const Offset(2, 2),
-        const Offset(-200, -100),
+        image.bottomRight - const Offset(2, 2),
+        Offset(-image.width / 2, -image.height / 4),
       );
       await tester.pump();
 
@@ -230,22 +232,84 @@ void main() {
       expect(changes, isNotEmpty);
     });
 
+    // Each corner must follow the finger from the moment it goes down, however
+    // far the finger travels before the drag is recognized.
+    for (final corner in ['topLeft', 'topRight', 'bottomLeft', 'bottomRight']) {
+      testWidgets('the $corner corner can be dragged inward', (tester) async {
+        final key = await pumpOverlay(tester, []);
+        final image = imageRect(tester);
+        final (start, toward) = switch (corner) {
+          'topLeft' => (image.topLeft, const Offset(1, 1)),
+          'topRight' => (image.topRight, const Offset(-1, 1)),
+          'bottomLeft' => (image.bottomLeft, const Offset(1, -1)),
+          _ => (image.bottomRight, const Offset(-1, -1)),
+        };
+
+        // Sit exactly on the corner and pull it about a third of the way in,
+        // in small steps like a finger does.
+        final gesture = await tester.startGesture(start);
+        for (var i = 0; i < 40; i++) {
+          await gesture.moveBy(
+            Offset(
+              toward.dx * image.width / 120,
+              toward.dy * image.height / 120,
+            ),
+          );
+        }
+        await gesture.up();
+        await tester.pump();
+
+        final rect = key.currentState!.selection;
+        expect(rect.width, closeTo(2 / 3, 0.03), reason: '$rect');
+        expect(rect.height, closeTo(2 / 3, 0.03), reason: '$rect');
+        // The opposite corner stays where it was.
+        switch (corner) {
+          case 'topLeft':
+            expect([rect.right, rect.bottom], [1.0, 1.0]);
+          case 'topRight':
+            expect([rect.left, rect.bottom], [0.0, 1.0]);
+          case 'bottomLeft':
+            expect([rect.right, rect.top], [1.0, 0.0]);
+          default:
+            expect([rect.left, rect.top], [0.0, 0.0]);
+        }
+      });
+    }
+
+    testWidgets('a handle just outside the image can be grabbed', (
+      tester,
+    ) async {
+      final key = await pumpOverlay(tester, []);
+      final image = imageRect(tester);
+
+      // The outer half of the handle lies outside the picture.
+      await tester.dragFrom(
+        image.bottomRight + const Offset(8, 8),
+        Offset(-image.width / 2, -image.height / 2),
+      );
+      await tester.pump();
+
+      final rect = key.currentState!.selection;
+      expect(rect.right, closeTo(0.5, 0.03));
+      expect(rect.bottom, closeTo(0.5, 0.03));
+    });
+
     testWidgets('dragging inside moves the selection without resizing', (
       tester,
     ) async {
       final key = await pumpOverlay(tester, []);
-      final topLeft = tester.getTopLeft(find.byType(CropOverlay));
+      final image = imageRect(tester);
       // Shrink first: pull the bottom-right corner to the center.
       await tester.dragFrom(
-        topLeft + const Offset(398, 398),
-        const Offset(-200, -200),
+        image.bottomRight - const Offset(2, 2),
+        Offset(-image.width / 2, -image.height / 2),
       );
       await tester.pump();
       final before = key.currentState!.selection;
 
       await tester.dragFrom(
-        topLeft + const Offset(100, 100),
-        const Offset(80, 40),
+        image.topLeft + Offset(image.width / 4, image.height / 4),
+        const Offset(40, 20),
       );
       await tester.pump();
 
@@ -260,10 +324,10 @@ void main() {
       tester,
     ) async {
       final key = await pumpOverlay(tester, []);
-      final topLeft = tester.getTopLeft(find.byType(CropOverlay));
+      final image = imageRect(tester);
 
       await tester.dragFrom(
-        topLeft + const Offset(398, 398),
+        image.bottomRight - const Offset(2, 2),
         const Offset(-600, -600),
       );
       await tester.pump();
@@ -272,7 +336,7 @@ void main() {
       expect(rect.height, greaterThanOrEqualTo(0.08 - 1e-9));
 
       await tester.dragFrom(
-        topLeft + const Offset(10, 10),
+        image.topLeft + const Offset(10, 10),
         const Offset(900, 900),
       );
       await tester.pump();
@@ -285,10 +349,10 @@ void main() {
     testWidgets('reset selects the whole image again', (tester) async {
       final changes = <Rect>[];
       final key = await pumpOverlay(tester, changes);
-      final topLeft = tester.getTopLeft(find.byType(CropOverlay));
+      final image = imageRect(tester);
       await tester.dragFrom(
-        topLeft + const Offset(398, 398),
-        const Offset(-200, -200),
+        image.bottomRight - const Offset(2, 2),
+        const Offset(-150, -150),
       );
       await tester.pump();
       expect(
