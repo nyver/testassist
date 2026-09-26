@@ -46,6 +46,53 @@ void main() {
       expect(h.drafts.draft!.questionText, 'Which protocol?');
     });
 
+    group('the image switch after recognition', () {
+      Future<QuestionDraft> startWith(String? image, String ocr) async {
+        final c = await containerWith();
+        await c.read(draftControllerProvider.future);
+        await c
+            .read(draftControllerProvider.notifier)
+            .startNew(imagePath: image, ocrText: ocr);
+        return c.read(draftControllerProvider).value!;
+      }
+
+      test('starts on when nothing was recognized', () async {
+        expect((await startWith('images/x.jpg', '')).sendImage, isTrue);
+      });
+
+      test('starts on when only garbage or too little was found', () async {
+        // No options were found in it.
+        expect(
+          (await startWith('images/x.jpg', 'CTOIMLa Poccuu?')).sendImage,
+          isTrue,
+        );
+        // One option is not a question yet.
+        expect(
+          (await startWith('images/x.jpg', 'Q?\nA. one')).sendImage,
+          isTrue,
+        );
+      });
+
+      test('stays off when the question and options were recognized', () async {
+        expect((await startWith('images/x.jpg', text)).sendImage, isFalse);
+      });
+
+      test('stays off without an image', () async {
+        expect((await startWith(null, '')).sendImage, isFalse);
+      });
+
+      test('the user can still turn it off', () async {
+        final c = await containerWith();
+        await c.read(draftControllerProvider.future);
+        final controller = c.read(draftControllerProvider.notifier);
+        await controller.startNew(imagePath: 'images/x.jpg', ocrText: '');
+
+        controller.setSendImage(value: false);
+
+        expect(c.read(draftControllerProvider).value!.sendImage, isFalse);
+      });
+    });
+
     test('a stored draft is restored by a new container', () async {
       final c1 = await containerWith();
       final controller = await started(c1);

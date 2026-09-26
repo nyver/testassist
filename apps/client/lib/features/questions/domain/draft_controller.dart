@@ -46,6 +46,10 @@ class DraftController extends AsyncNotifier<QuestionDraft?> {
 
   /// Replaces the draft with a freshly recognized question. The previous
   /// draft's image is deleted: it only ever belonged to that draft.
+  ///
+  /// When the text cannot be sent as recognized, the image switch starts on:
+  /// the image is then the only way to get an answer. It is left off otherwise,
+  /// and the user can turn it off either way.
   Future<void> startNew({
     required String? imagePath,
     required String ocrText,
@@ -57,7 +61,9 @@ class DraftController extends AsyncNotifier<QuestionDraft?> {
       ocrText: ocrText,
       questionText: parsed.question,
       options: parsed.options,
-      sendImage: false,
+      sendImage:
+          imagePath != null &&
+          !DraftValidation.of(parsed.question, parsed.options).canSend,
     );
     _saveTimer?.cancel();
     state = AsyncData(draft);

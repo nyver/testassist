@@ -36,7 +36,7 @@ Scope: the Test Assistant server (Go, self-hosted) and the Android client. The s
 
 ## Privacy
 
-- OCR runs on the device. The image leaves the phone only when the user switches "Send image to model" on and the selected model supports images; the server rejects an image for a text-only model before contacting the provider.
+- OCR runs on the device. The image leaves the phone only when "Send image to model" is on and the selected model supports images. The switch is off by default and turns on by itself only when the app could not recognize the question and options, and the user can turn it off before sending; the server rejects an image for a text-only model before contacting the provider.
 - Every JPEG the app writes is stripped of EXIF metadata (GPS position, timestamps, device model) after the orientation is applied to the pixels, so neither the stored image nor the uploaded one carries it.
 - The question, options and the image (if any) are sent to the LLM provider chosen by the operator. Users should choose providers accordingly.
 - Answers are saved only on the phone.
