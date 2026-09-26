@@ -1,0 +1,38 @@
+# Strict static analysis. `flutter analyze` must finish without any issue.
+include: package:flutter_lints/flutter.yaml
+
+analyzer:
+  language:
+    strict-casts: true
+    strict-inference: true
+    strict-raw-types: true
+  exclude:
+    - build/**
+    - android/**
+    - lib/l10n/generated/**
+    - test/generated_migrations/**
+    - '**/*.g.dart'
+    - '**/*.freezed.dart'
+    - ios/**
+    - web/**
+    - windows/**
+    - macos/**
+    - linux/**
+  errors:
+    missing_required_param: error
+    missing_return: error
+    invalid_annotation_target: ignore
+
+linter:
+  rules:
+    - always_declare_return_types
+    - avoid_dynamic_calls
+    - avoid_print
+    - cancel_subscriptions
+    - close_sinks
+    - directives_ordering
+    - only_throw_errors
+    - prefer_final_locals
+    - prefer_single_quotes
+    - unawaited_futures
+    - use_build_context_synchronously

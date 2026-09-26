@@ -1,0 +1,56 @@
+name: test_assistant
+description: "Test Assistant client: photo of a multiple-choice question to an answer, using a self-hosted server."
+publish_to: 'none'
+
+version: 0.1.0+1
+
+environment:
+  sdk: ^3.13.0
+
+# Every dependency was reviewed for license, maintenance and footprint; see
+# docs/architecture/dependencies.md.
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+
+  # State management and navigation.
+  flutter_riverpod: ^3.4.3
+  go_router: ^18.0.1
+
+  # Networking and TLS trust.
+  dio: ^5.11.1
+  crypto: ^3.0.7
+
+  # Local persistence.
+  drift: ^2.35.0
+  drift_flutter: ^0.3.1
+  flutter_secure_storage: ^11.2.0
+  shared_preferences: ^2.5.5
+  path_provider: ^2.1.6
+  path: ^1.9.1
+
+  # Capture, image processing and on-device OCR.
+  camera: ^0.12.1
+  image_picker: ^1.2.3
+  image: ^4.10.1
+  google_mlkit_text_recognition: ^0.17.1
+  permission_handler: ^12.0.1
+
+  # Sharing and localization.
+  share_plus: ^13.3.0
+  intl: ^0.20.3
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+  build_runner: ^2.15.0
+  drift_dev: ^2.35.0
+  integration_test:
+    sdk: flutter
+
+flutter:
+  uses-material-design: true
+  generate: true
