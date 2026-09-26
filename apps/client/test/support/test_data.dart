@@ -23,6 +23,8 @@ AnalysisResult answeredResult({
   String provider = 'openrouter',
   String model = 'openai/gpt-4o-mini',
   String? requestId = 'req-1',
+  String? recognizedQuestion,
+  List<OptionItem>? recognizedOptions,
 }) => AnalysisResult(
   status: AnswerStatus.answered,
   correctOptionIds: ids,
@@ -35,6 +37,8 @@ AnalysisResult answeredResult({
   provider: provider,
   model: model,
   requestId: requestId,
+  recognizedQuestion: recognizedQuestion,
+  recognizedOptions: recognizedOptions,
 );
 
 AnalysisResult uncertainResult({

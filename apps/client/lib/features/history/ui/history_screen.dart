@@ -89,7 +89,7 @@ class _HistoryTile extends ConsumerWidget {
       key: Key('history-entry-${entry.id}'),
       minVerticalPadding: 12,
       title: Text(
-        entry.questionText,
+        displayQuestion(l10n, entry),
         maxLines: 2,
         overflow: TextOverflow.ellipsis,
       ),

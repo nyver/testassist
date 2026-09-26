@@ -143,6 +143,87 @@ void main() {
     });
   });
 
+  group('image only', () {
+    setUp(() async => container = await makeContainer());
+
+    void clearText() {
+      final draft = container.read(draftControllerProvider.notifier)
+        ..updateQuestion('');
+      for (var i = optionsAbcd.length - 1; i >= 0; i--) {
+        draft.removeOption(i);
+      }
+    }
+
+    test('no text with the image goes as an image alone', () async {
+      clearText();
+      h.questionsApi.onAnalyze = (request, _) => answeredResult(
+        ids: const ['A'],
+        answerText: 'Object-oriented programming',
+        recognizedQuestion: 'What is OOP?',
+        recognizedOptions: const [
+          OptionItem(id: 'A', text: 'Object-oriented programming'),
+          OptionItem(id: 'B', text: 'A lonely programmer'),
+        ],
+      );
+
+      await analyze();
+
+      final request = h.questionsApi.requests.single;
+      expect(request.imageOnly, isTrue);
+      expect(request.question, isEmpty);
+      expect(request.options, isEmpty);
+      expect(request.imagePath, h.images.resolve(draftImage)!.path);
+
+      final entry = h.history.entries.single;
+      expect(entry.questionText, 'What is OOP?', reason: 'what the model read');
+      expect(entry.options.map((o) => o.id), ['A', 'B']);
+      expect(entry.result.correctOptionIds, ['A']);
+      expect(entry.ocrText, 'raw ocr');
+    });
+
+    test('an answer that read nothing is saved without a question', () async {
+      clearText();
+      h.questionsApi.onAnalyze = (request, _) => uncertainResult();
+
+      await analyze();
+
+      final entry = h.history.entries.single;
+      expect(entry.questionText, isEmpty);
+      expect(entry.options, isEmpty);
+      expect(entry.result.isUncertain, isTrue);
+    });
+
+    test('an incomplete text is replaced by the image', () async {
+      // One option only: the text alone would be refused by the server.
+      container.read(draftControllerProvider.notifier)
+        ..removeOption(3)
+        ..removeOption(2)
+        ..removeOption(1);
+
+      await analyze();
+
+      expect(h.questionsApi.requests.single.imageOnly, isTrue);
+    });
+
+    test('a valid text is sent with the image as before', () async {
+      await analyze();
+
+      final request = h.questionsApi.requests.single;
+      expect(request.imageOnly, isFalse);
+      expect(request.question, 'Which protocol encrypts web traffic?');
+      expect(request.imagePath, isNotNull);
+    });
+
+    test('no image request is built when there is no image', () async {
+      clearText();
+      await analyze(model: 'text-model', vision: false);
+
+      // The text goes as it is and the server refuses it.
+      expect(h.questionsApi.requests.single.imageOnly, isFalse);
+      expect(h.questionsApi.requests.single.imagePath, isNull);
+    });
+  });
+
   group('the delete-images setting', () {
     test('removes the file and keeps the text', () async {
       container = await makeContainer(

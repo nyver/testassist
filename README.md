@@ -85,6 +85,8 @@ Server commands: `serve` (default), `certificate fingerprint`, `token show`, `to
 
 **Send image to model** is off by default and works only with models that support images (marked "Images" in the list). Without it only the recognized text is sent.
 
+With the switch on, the text is optional: when nothing was recognized, or the question or the options are incomplete, **Get answer** stays available and only the image is sent. The model reads the question and options from the picture and reports them back, so the result and the history show what it read. This is the way to handle Russian questions, which the on-device OCR cannot read.
+
 If the certificate changes later, the app blocks the connection with "Server certificate has changed" and sends nothing. If you changed it on purpose, open **Server settings** and choose **Reset trusted certificate**.
 
 ## Configuration

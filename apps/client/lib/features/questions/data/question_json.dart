@@ -75,6 +75,8 @@ AnalysisResult analysisResultFromApi(Map<String, Object?> json) {
     provider: json['provider']! as String,
     model: json['model']! as String,
     requestId: json['requestId'] as String?,
+    recognizedQuestion: json['recognizedQuestion'] as String?,
+    recognizedOptions: _optionList(json['recognizedOptions']),
   );
 }
 
@@ -89,6 +91,15 @@ Map<String, Object?> _decodeVersioned(String source) {
     throw FormatException('Unsupported stored JSON version: $version');
   }
   return decoded;
+}
+
+List<OptionItem>? _optionList(Object? value) {
+  if (value is! List<Object?>) return null;
+  return [
+    for (final item in value)
+      if (item is Map<String, Object?>)
+        OptionItem(id: item['id']! as String, text: item['text']! as String),
+  ];
 }
 
 List<String> _stringList(Object? value) {

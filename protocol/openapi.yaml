@@ -96,6 +96,13 @@ paths:
         The server never stores the question, options, image, prompt or model
         output. An image is forwarded only to models with the `vision`
         capability.
+
+        Two forms are accepted. With text, `question` and `options` are both
+        required. Without text, both are omitted and only `image` is sent: the
+        model reads the question and options from the image (a `vision` model
+        is required) and reports them back as `recognizedQuestion` and
+        `recognizedOptions`, which `correctOptionIds` refer to. Sending only one
+        of `question` and `options` is an error.
       requestBody:
         required: true
         content:
@@ -248,7 +255,9 @@ components:
           maxLength: 1000
     AnalyzeRequest:
       type: object
-      required: [question, options]
+      description: |
+        `question` and `options` are required unless both are omitted and an
+        `image` is sent.
       properties:
         question:
           type: string
@@ -320,6 +329,16 @@ components:
           type: string
         model:
           type: string
+        recognizedQuestion:
+          type: string
+          description: |
+            The question the model read from the image. Present only for a
+            request without text and only when the model could read one.
+        recognizedOptions:
+          type: array
+          items:
+            $ref: "#/components/schemas/Option"
+          description: Present together with `recognizedQuestion`.
     ErrorCode:
       type: string
       enum:

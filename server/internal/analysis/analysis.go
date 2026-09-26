@@ -62,6 +62,10 @@ type Request struct {
 	Provider string
 	Model    string
 	Image    *Image
+
+	// ImageOnly marks a request without text: Question and Options are empty
+	// and the model reads them from Image, which is then required.
+	ImageOnly bool
 }
 
 // Result is a validated, normalized answer. The JSON tags match the analyze
@@ -77,6 +81,11 @@ type Result struct {
 	Warnings         []string `json:"warnings"`
 	Provider         string   `json:"provider"`
 	Model            string   `json:"model"`
+
+	// RecognizedQuestion and RecognizedOptions are what the model read from
+	// the image of an image-only request; absent otherwise.
+	RecognizedQuestion string   `json:"recognizedQuestion,omitempty"`
+	RecognizedOptions  []Option `json:"recognizedOptions,omitempty"`
 }
 
 // Settings are the analysis parameters taken from configuration.
@@ -136,6 +145,11 @@ func (s *Service) Analyze(ctx context.Context, req Request) (Result, error) {
 		StructuredOutput: model.StructuredOutput,
 		ResponseSchema:   answerSchema,
 	}
+	if req.ImageOnly {
+		chat.System = imageOnlySystemPrompt
+		chat.User = buildImageOnlyUserMessage(req.Language)
+		chat.ResponseSchema = imageOnlyAnswerSchema
+	}
 	if req.Image != nil {
 		chat.Image = &llm.Image{MIME: req.Image.MIME, Data: req.Image.Data}
 	}
@@ -145,19 +159,58 @@ func (s *Service) Analyze(ctx context.Context, req Request) (Result, error) {
 		return res, mapLLMError(ctx, err)
 	}
 
-	ids := make(map[string]bool, len(req.Options))
-	for _, o := range req.Options {
-		ids[o.ID] = true
+	var ans modelAnswer
+	if req.ImageOnly {
+		ans, err = parseImageAnswer(reply.Content)
+	} else {
+		ids := make(map[string]bool, len(req.Options))
+		for _, o := range req.Options {
+			ids[o.ID] = true
+		}
+		ans, err = parseAnswer(reply.Content, ids)
 	}
-	ans, err := parseAnswer(reply.Content, ids)
 	if err != nil {
 		return res, apierr.Wrap(apierr.LLMInvalidResponse, "The LLM returned an invalid response.", err)
 	}
-	return s.buildResult(res, req.Options, ans), nil
+
+	options := req.Options
+	if req.ImageOnly {
+		options = ans.Options
+		res.RecognizedQuestion, res.RecognizedOptions = ans.Question, ans.Options
+	}
+	return s.buildResult(res, options, ans), nil
 }
 
 // normalizeRequest trims and validates the request fields.
 func normalizeRequest(req Request) (Request, error) {
+	invalid := func(format string, args ...any) error {
+		return apierr.New(apierr.InvalidRequest, fmt.Sprintf(format, args...))
+	}
+
+	if req.ImageOnly {
+		if req.Image == nil {
+			return req, invalid("image is required when question and options are omitted.")
+		}
+		req.Question, req.Options = "", nil
+	} else {
+		var err error
+		if req, err = normalizeQuestion(req); err != nil {
+			return req, err
+		}
+	}
+
+	req.Language = strings.TrimSpace(req.Language)
+	if req.Language == "" {
+		req.Language = defaultLanguage
+	}
+	if len(req.Language) > maxLanguageChars || !languageTag.MatchString(req.Language) {
+		return req, invalid("language must be a BCP 47 language tag.")
+	}
+	return req, nil
+}
+
+// normalizeQuestion trims and validates the question and options.
+func normalizeQuestion(req Request) (Request, error) {
 	invalid := func(format string, args ...any) error {
 		return apierr.New(apierr.InvalidRequest, fmt.Sprintf(format, args...))
 	}
@@ -188,14 +241,6 @@ func normalizeRequest(req Request) (Request, error) {
 		options[i] = Option{ID: id, Text: text}
 	}
 	req.Options = options
-
-	req.Language = strings.TrimSpace(req.Language)
-	if req.Language == "" {
-		req.Language = defaultLanguage
-	}
-	if len(req.Language) > maxLanguageChars || !languageTag.MatchString(req.Language) {
-		return req, invalid("language must be a BCP 47 language tag.")
-	}
 	return req, nil
 }
 

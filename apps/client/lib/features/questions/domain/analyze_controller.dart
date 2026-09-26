@@ -148,21 +148,27 @@ class AnalyzeController extends Notifier<AnalyzeState> {
         if (file != null && await file.exists()) uploadPath = file.path;
       }
 
+      // Text that cannot be sent as it is (nothing recognized, or too little)
+      // is left out when the image goes along: the model reads the image.
+      final imageOnly =
+          uploadPath != null && !DraftValidation.of(question, options).canSend;
+
       final result = await api.analyze(
         AnalyzeRequest(
-          question: question,
-          options: options,
+          question: imageOnly ? '' : question,
+          options: imageOnly ? const [] : options,
           language: language,
           provider: provider,
           model: model,
           imagePath: uploadPath,
+          imageOnly: imageOnly,
         ),
         cancelToken: token,
       );
 
       final entryId = await _save(
-        question: question,
-        options: options,
+        question: imageOnly ? (result.recognizedQuestion ?? '') : question,
+        options: imageOnly ? (result.recognizedOptions ?? const []) : options,
         ocrText: ocrText,
         imagePath: imagePath,
         source: source,

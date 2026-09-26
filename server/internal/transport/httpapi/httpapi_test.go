@@ -791,6 +791,74 @@ func TestAnalyzeImageHandling(t *testing.T) {
 	})
 }
 
+func TestAnalyzeImageOnly(t *testing.T) {
+	t.Parallel()
+
+	png := &formImage{data: pngBytes, declaredCT: "image/png", filename: "q.png"}
+	const reply = `{"status":"answered","question":"Which protocol encrypts HTTP?","options":[{"id":"A","text":"FTP"},{"id":"B","text":"HTTPS"}],"correctOptionIds":["B"],"explanation":"TLS.","details":null,"confidence":0.9,"warnings":[]}`
+
+	t.Run("an image without text is analyzed", func(t *testing.T) {
+		t.Parallel()
+		e := newEnv(t)
+		e.llm.reply = reply
+		rec := e.analyze(t, nil, png)
+		if rec.Code != 200 {
+			t.Fatalf("status = %d; %s", rec.Code, rec.Body.String())
+		}
+		body := decode(t, rec)
+		if body["recognizedQuestion"] != "Which protocol encrypts HTTP?" || body["answerText"] != "HTTPS" {
+			t.Errorf("body = %v", body)
+		}
+		if opts, _ := body["recognizedOptions"].([]any); len(opts) != 2 {
+			t.Errorf("recognizedOptions = %v", body["recognizedOptions"])
+		}
+		if e.llm.completes[0].Image == nil {
+			t.Error("the image was not forwarded")
+		}
+	})
+
+	t.Run("a request with text does not report recognized fields", func(t *testing.T) {
+		t.Parallel()
+		e := newEnv(t)
+		body := decode(t, e.analyze(t, baseFields(), png))
+		if _, ok := body["recognizedQuestion"]; ok {
+			t.Errorf("unexpected recognizedQuestion: %v", body)
+		}
+		if _, ok := body["recognizedOptions"]; ok {
+			t.Errorf("unexpected recognizedOptions: %v", body)
+		}
+	})
+
+	t.Run("no text and no image", func(t *testing.T) {
+		t.Parallel()
+		e := newEnv(t)
+		assertError(t, e.analyze(t, nil, nil), 400, apierr.InvalidRequest)
+		if e.llm.completeCount() != 0 {
+			t.Error("the provider was called")
+		}
+	})
+
+	t.Run("only one of question and options", func(t *testing.T) {
+		t.Parallel()
+		e := newEnv(t)
+		assertError(t, e.analyze(t, []formField{{"question", "Q?"}}, png), 400, apierr.InvalidRequest)
+		assertError(t, e.analyze(t, []formField{{"options", optionsABCD}}, png), 400, apierr.InvalidRequest)
+		if e.llm.completeCount() != 0 {
+			t.Error("the provider was called")
+		}
+	})
+
+	t.Run("a text-only model is rejected", func(t *testing.T) {
+		t.Parallel()
+		e := newEnv(t)
+		rec := e.analyze(t, []formField{{"model", textOnly}}, png)
+		assertError(t, rec, 422, apierr.ModelDoesNotSupportVision)
+		if e.llm.completeCount() != 0 {
+			t.Error("the provider was called")
+		}
+	})
+}
+
 func TestBodyLimit(t *testing.T) {
 	t.Parallel()
 

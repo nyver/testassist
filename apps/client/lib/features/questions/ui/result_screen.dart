@@ -203,7 +203,10 @@ class _ResultBody extends ConsumerWidget {
         child: ListView(
           padding: const EdgeInsets.all(16),
           children: [
-            Text(entry.questionText, style: theme.textTheme.titleMedium),
+            Text(
+              displayQuestion(l10n, entry),
+              style: theme.textTheme.titleMedium,
+            ),
             if (image != null && image.existsSync()) ...[
               const SizedBox(height: 12),
               ClipRRect(

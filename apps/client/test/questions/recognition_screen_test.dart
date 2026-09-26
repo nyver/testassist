@@ -111,9 +111,7 @@ void main() {
     await pumpApp(tester, h);
 
     expect(
-      find.text(
-        'Could not reliably recognize the question. Try taking the photo again.',
-      ),
+      find.textContaining('Could not reliably recognize the question.'),
       findsOneWidget,
     );
     expect(enabled(tester), isFalse);
@@ -138,6 +136,50 @@ void main() {
     await tester.enterText(find.byKey(const Key('question-field')), 'Typed');
     await tester.pump();
     expect(find.text('Typed'), findsOneWidget);
+  });
+
+  group('without recognized text', () {
+    QuestionDraft draftNoText({bool sendImage = false}) => _draft(
+      question: '',
+      options: const [],
+      ocr: '',
+      image: 'images/x.jpg',
+      sendImage: sendImage,
+    );
+
+    testWidgets('cannot be sent while the image stays home', (tester) async {
+      h.drafts.draft = draftNoText();
+      await pumpApp(tester, h);
+
+      expect(enabled(tester), isFalse);
+      expect(find.byKey(const Key('image-only-hint')), findsNothing);
+    });
+
+    testWidgets('can be sent as an image alone once the switch is on', (
+      tester,
+    ) async {
+      h.drafts.draft = draftNoText(sendImage: true);
+      await pumpApp(tester, h);
+
+      expect(enabled(tester), isTrue);
+      expect(find.byKey(const Key('image-only-hint')), findsOneWidget);
+      // The recognition warning stays: the text is still missing.
+      expect(find.byKey(const Key('low-quality-warning')), findsOneWidget);
+    });
+
+    testWidgets('a text-only model cannot take the image, so it is blocked', (
+      tester,
+    ) async {
+      h.drafts.draft = draftNoText(sendImage: true);
+      await pumpApp(tester, h);
+      await tester.tap(find.byKey(const Key('model-button')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('model-text-model')));
+      await tester.pumpAndSettle();
+
+      expect(enabled(tester), isFalse);
+      expect(find.byKey(const Key('image-only-hint')), findsNothing);
+    });
   });
 
   testWidgets('re-parsing replaces the fields from the edited raw text', (

@@ -55,11 +55,13 @@ class DioQuestionsApi implements QuestionsApi {
     CancelToken? cancelToken,
   }) => _connection.guard((dio) async {
     final form = FormData.fromMap({
-      'question': request.question.trim(),
-      'options': jsonEncode([
-        for (final o in request.options)
-          {'id': o.id.trim(), 'text': o.text.trim()},
-      ]),
+      if (!request.imageOnly) ...{
+        'question': request.question.trim(),
+        'options': jsonEncode([
+          for (final o in request.options)
+            {'id': o.id.trim(), 'text': o.text.trim()},
+        ]),
+      },
       'language': request.language,
       'provider': request.provider,
       'model': request.model,

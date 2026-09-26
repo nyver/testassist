@@ -49,17 +49,21 @@ func (s *Server) analyzeQuestion(w http.ResponseWriter, r *http.Request) error {
 		return err
 	}
 
+	imageOnly := !form.seen["question"] && !form.seen["options"]
 	var options []analysis.Option
-	if err := json.Unmarshal([]byte(form.options), &options); err != nil {
-		return apierr.New(apierr.InvalidRequest, "options must be a JSON array of objects with id and text.")
+	if !imageOnly {
+		if err := json.Unmarshal([]byte(form.options), &options); err != nil {
+			return apierr.New(apierr.InvalidRequest, "options must be a JSON array of objects with id and text.")
+		}
 	}
 
 	req := analysis.Request{
-		Question: form.question,
-		Options:  options,
-		Language: form.language,
-		Provider: form.provider,
-		Model:    form.model,
+		Question:  form.question,
+		Options:   options,
+		Language:  form.language,
+		Provider:  form.provider,
+		Model:     form.model,
+		ImageOnly: imageOnly,
 	}
 	if form.image != nil {
 		req.Image = &analysis.Image{MIME: form.imageMIME, Data: form.image}
@@ -95,6 +99,10 @@ func (s *Server) readAnalyzeForm(r *http.Request) (*analyzeForm, error) {
 		if err := s.readPart(form, part); err != nil {
 			return nil, err
 		}
+	}
+	// Without text the image alone is the question; the model reads it.
+	if form.image != nil && !form.seen["question"] && !form.seen["options"] {
+		return form, nil
 	}
 	if !form.seen["question"] {
 		return nil, apierr.New(apierr.InvalidRequest, "question is required.")

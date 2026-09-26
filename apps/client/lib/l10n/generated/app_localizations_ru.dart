@@ -311,7 +311,14 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get recognitionLowQuality =>
-      'Не удалось надёжно распознать вопрос. Попробуйте сфотографировать ещё раз.';
+      'Не удалось надёжно распознать вопрос. Попробуйте сфотографировать ещё раз или включите «Отправить изображение модели»: модель прочитает вопрос с картинки.';
+
+  @override
+  String get recognitionImageOnlyHint =>
+      'Текст неполный, поэтому модель прочитает вопрос с изображения.';
+
+  @override
+  String get questionFromImage => 'Вопрос с изображения';
 
   @override
   String get recognitionSendImage => 'Отправить изображение модели';

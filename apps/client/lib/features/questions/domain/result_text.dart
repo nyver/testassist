@@ -13,6 +13,13 @@ List<(String, String)> correctOptions(
   return [for (final id in result.correctOptionIds) (id, byId[id] ?? '')];
 }
 
+/// The question of an entry for display. An entry answered from the image alone
+/// has none when the model could not read one.
+String displayQuestion(AppLocalizations l10n, HistoryEntry entry) =>
+    entry.questionText.trim().isEmpty
+    ? l10n.questionFromImage
+    : entry.questionText;
+
 /// `B. HTTPS` style label of a correct option.
 String optionLabel((String, String) option) =>
     option.$2.isEmpty ? option.$1 : '${option.$1}. ${option.$2}';
@@ -22,7 +29,7 @@ String optionLabel((String, String) option) =>
 String composeShareText(AppLocalizations l10n, HistoryEntry entry) {
   final result = entry.result;
   final buffer = StringBuffer()
-    ..writeln('${l10n.resultShareQuestion}: ${entry.questionText}');
+    ..writeln('${l10n.resultShareQuestion}: ${displayQuestion(l10n, entry)}');
 
   if (result.isUncertain) {
     buffer.writeln('${l10n.resultShareAnswer}: ${l10n.resultUncertain}');

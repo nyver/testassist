@@ -311,7 +311,14 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get recognitionLowQuality =>
-      'Could not reliably recognize the question. Try taking the photo again.';
+      'Could not reliably recognize the question. Try taking the photo again, or turn on \"Send image to model\" so the model reads it from the picture.';
+
+  @override
+  String get recognitionImageOnlyHint =>
+      'The text is incomplete, so the model will read the question from the image.';
+
+  @override
+  String get questionFromImage => 'Question from the image';
 
   @override
   String get recognitionSendImage => 'Send image to model';

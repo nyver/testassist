@@ -1,0 +1,18 @@
+{
+  "requestId": "req-example-4",
+  "status": "answered",
+  "correctOptionIds": ["A"],
+  "answerText": "Объектно-ориентированное программирование",
+  "explanation": "ООП строит программу из объектов, экземпляров классов.",
+  "details": null,
+  "confidence": 0.88,
+  "confidenceLevel": "high",
+  "warnings": [],
+  "provider": "openrouter",
+  "model": "openai/gpt-4o-mini",
+  "recognizedQuestion": "Что такое ООП?",
+  "recognizedOptions": [
+    { "id": "A", "text": "Объектно-ориентированное программирование" },
+    { "id": "B", "text": "Очень одинокий программист" }
+  ]
+}

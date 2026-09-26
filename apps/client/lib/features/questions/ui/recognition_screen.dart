@@ -66,6 +66,12 @@ class _RecognitionScreenState extends ConsumerState<RecognitionScreen>
 
   void _sendTextOnly() {
     _draftController.setSendImage(value: false);
+    final draft = ref.read(draftControllerProvider).value;
+    // Without a valid text there is nothing to send: the form stays as it is.
+    if (draft == null ||
+        !DraftValidation.of(draft.questionText, draft.options).canSend) {
+      return;
+    }
     _getAnswer();
   }
 
@@ -155,8 +161,13 @@ class _DraftForm extends ConsumerWidget {
         !validation.enoughOptions;
     final canAttachImage =
         draft.imagePath != null && (selection?.supportsVision ?? false);
+    final sendsImage = draft.sendImage && canAttachImage;
+    // An image can go without text: the model then reads the question itself.
+    final imageOnly = sendsImage && !validation.canSend;
     final canSend =
-        validation.canSend && (selection?.canAnalyze ?? false) && !running;
+        (validation.canSend || sendsImage) &&
+        (selection?.canAnalyze ?? false) &&
+        !running;
 
     return Center(
       child: ConstrainedBox(
@@ -249,10 +260,15 @@ class _DraftForm extends ConsumerWidget {
               key: const Key('send-image-switch'),
               contentPadding: EdgeInsets.zero,
               title: Text(l10n.recognitionSendImage),
-              subtitle: canAttachImage || draft.imagePath == null
-                  ? null
-                  : Text(l10n.recognitionSendImageUnavailable),
-              value: draft.sendImage && canAttachImage,
+              subtitle: imageOnly
+                  ? Text(
+                      l10n.recognitionImageOnlyHint,
+                      key: const Key('image-only-hint'),
+                    )
+                  : (canAttachImage || draft.imagePath == null
+                        ? null
+                        : Text(l10n.recognitionSendImageUnavailable)),
+              value: sendsImage,
               onChanged: canAttachImage
                   ? (value) => controller.setSendImage(value: value)
                   : null,

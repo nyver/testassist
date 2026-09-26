@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+	"unicode/utf8"
 )
 
 // Answer statuses.
@@ -23,6 +24,11 @@ type modelAnswer struct {
 	Details          *string
 	Confidence       float64
 	Warnings         []string
+
+	// Question and Options are what the model read from the image of an
+	// image-only request. They stay empty for a request with text.
+	Question string
+	Options  []Option
 }
 
 // errInvalidAnswer marks any violation of the answer contract. Its messages
@@ -39,20 +45,71 @@ func invalidf(format string, args ...any) error {
 // required fields of the right type, a confidence within 0..1, option ids taken
 // from validIDs, and at least one id when the status is "answered".
 func parseAnswer(raw string, validIDs map[string]bool) (modelAnswer, error) {
+	fields, err := decodeObject(raw)
+	if err != nil {
+		return modelAnswer{}, err
+	}
+	ans, err := parseCore(fields)
+	if err != nil {
+		return modelAnswer{}, err
+	}
+	if err := checkIDs(ans, validIDs); err != nil {
+		return modelAnswer{}, err
+	}
+	return ans, nil
+}
+
+// parseImageAnswer validates the output for an image-only request. The model
+// also reports the question and options it read from the image; the answer's
+// option ids must come from those. An uncertain answer may leave them out.
+func parseImageAnswer(raw string) (modelAnswer, error) {
+	fields, err := decodeObject(raw)
+	if err != nil {
+		return modelAnswer{}, err
+	}
+	ans, err := parseCore(fields)
+	if err != nil {
+		return modelAnswer{}, err
+	}
+
+	question, options, err := recognized(fields)
+	switch {
+	case err == nil:
+		ans.Question, ans.Options = question, options
+	case ans.Status == StatusAnswered:
+		return modelAnswer{}, err
+	}
+
+	validIDs := make(map[string]bool, len(ans.Options))
+	for _, o := range ans.Options {
+		validIDs[o.ID] = true
+	}
+	if err := checkIDs(ans, validIDs); err != nil {
+		return modelAnswer{}, err
+	}
+	return ans, nil
+}
+
+// decodeObject decodes the output as exactly one JSON object.
+func decodeObject(raw string) (map[string]json.RawMessage, error) {
 	body := stripCodeFence(raw)
 
 	dec := json.NewDecoder(strings.NewReader(body))
 	var fields map[string]json.RawMessage
 	if err := dec.Decode(&fields); err != nil {
-		return modelAnswer{}, invalidf("output is not a JSON object")
+		return nil, invalidf("output is not a JSON object")
 	}
 	if dec.More() {
-		return modelAnswer{}, invalidf("output has content after the JSON object")
+		return nil, invalidf("output has content after the JSON object")
 	}
 	if fields == nil { // the literal null
-		return modelAnswer{}, invalidf("output is not a JSON object")
+		return nil, invalidf("output is not a JSON object")
 	}
+	return fields, nil
+}
 
+// parseCore reads and type-checks the fields every answer has.
+func parseCore(fields map[string]json.RawMessage) (modelAnswer, error) {
 	var ans modelAnswer
 	if err := requiredString(fields, "status", &ans.Status); err != nil {
 		return modelAnswer{}, err
@@ -78,16 +135,72 @@ func parseAnswer(raw string, validIDs map[string]bool) (modelAnswer, error) {
 	if err := requiredStringSlice(fields, "warnings", &ans.Warnings); err != nil {
 		return modelAnswer{}, err
 	}
+	return ans, nil
+}
 
+// checkIDs verifies the answered ids against the known option ids.
+func checkIDs(ans modelAnswer, validIDs map[string]bool) error {
 	for _, id := range ans.CorrectOptionIDs {
 		if !validIDs[id] {
-			return modelAnswer{}, invalidf("correctOptionIds contains an id that is not one of the options")
+			return invalidf("correctOptionIds contains an id that is not one of the options")
 		}
 	}
 	if ans.Status == StatusAnswered && len(ans.CorrectOptionIDs) == 0 {
-		return modelAnswer{}, invalidf("status is answered but correctOptionIds is empty")
+		return invalidf("status is answered but correctOptionIds is empty")
 	}
-	return ans, nil
+	return nil
+}
+
+// recognized reads the question and options the model transcribed from the
+// image and applies the request limits to them. Overlong texts are cut rather
+// than rejected: the answer is already paid for and the text is only shown.
+func recognized(fields map[string]json.RawMessage) (string, []Option, error) {
+	var question string
+	if err := requiredString(fields, "question", &question); err != nil {
+		return "", nil, err
+	}
+	question = truncateRunes(strings.TrimSpace(question), maxQuestionChars)
+	if question == "" {
+		return "", nil, invalidf("question is empty")
+	}
+
+	raw, ok := fields["options"]
+	if !ok {
+		return "", nil, missing("options")
+	}
+	var list []Option
+	if err := json.Unmarshal(raw, &list); err != nil || isNull(raw) {
+		return "", nil, wrongType("options")
+	}
+	if len(list) < minOptions || len(list) > maxOptions {
+		return "", nil, invalidf("options has an unsupported number of items")
+	}
+
+	seen := make(map[string]bool, len(list))
+	options := make([]Option, len(list))
+	for i, o := range list {
+		id := strings.TrimSpace(o.ID)
+		text := truncateRunes(strings.TrimSpace(o.Text), maxOptionChars)
+		if n := utf8.RuneCountInString(id); n < 1 || n > maxOptionIDChars {
+			return "", nil, invalidf("an option id has an unsupported length")
+		}
+		if seen[id] {
+			return "", nil, invalidf("option ids are not unique")
+		}
+		seen[id] = true
+		if text == "" {
+			return "", nil, invalidf("an option text is empty")
+		}
+		options[i] = Option{ID: id, Text: text}
+	}
+	return question, options, nil
+}
+
+func truncateRunes(s string, limit int) string {
+	if utf8.RuneCountInString(s) <= limit {
+		return s
+	}
+	return string([]rune(s)[:limit])
 }
 
 // stripCodeFence removes one surrounding Markdown code fence (``` or ```json).

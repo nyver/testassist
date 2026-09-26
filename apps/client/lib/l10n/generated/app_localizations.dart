@@ -653,8 +653,20 @@ abstract class AppLocalizations {
   /// No description provided for @recognitionLowQuality.
   ///
   /// In en, this message translates to:
-  /// **'Could not reliably recognize the question. Try taking the photo again.'**
+  /// **'Could not reliably recognize the question. Try taking the photo again, or turn on \"Send image to model\" so the model reads it from the picture.'**
   String get recognitionLowQuality;
+
+  /// No description provided for @recognitionImageOnlyHint.
+  ///
+  /// In en, this message translates to:
+  /// **'The text is incomplete, so the model will read the question from the image.'**
+  String get recognitionImageOnlyHint;
+
+  /// No description provided for @questionFromImage.
+  ///
+  /// In en, this message translates to:
+  /// **'Question from the image'**
+  String get questionFromImage;
 
   /// No description provided for @recognitionSendImage.
   ///

@@ -64,6 +64,6 @@ See `docs/adr/`: TLS trust model (001), LLM provider abstraction (002), server-s
 ## Known limits of this version
 
 - One server per phone, one shared Bearer token.
-- Cyrillic OCR is not usable with the bundled Latin recognizer; use manual editing or "Send image to model" (see `ocr.md`).
+- Cyrillic OCR is not usable with the bundled Latin recognizer; use manual editing or "Send image to model", which works without any recognized text (see `ocr.md`).
 - Certificates are read at startup; a change needs a restart and a manual "Reset trusted certificate" on each phone.
 - No Test Session mode, history filters or export, perspective correction, learning mode, metrics or provider failover.

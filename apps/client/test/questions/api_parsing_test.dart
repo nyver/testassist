@@ -226,6 +226,57 @@ void main() {
       expect(form.files.single.value.contentType?.mimeType, 'image/jpeg');
     });
 
+    test('an image-only request carries no question and no options', () async {
+      final dir = Directory.systemTemp.createTempSync('api_test_');
+      addTearDown(() {
+        try {
+          dir.deleteSync(recursive: true);
+        } on FileSystemException {
+          // Windows can keep the file open a moment longer; it is a temp dir.
+        }
+      });
+      final file = File('${dir.path}/q.jpg')..writeAsBytesSync([1, 2, 3]);
+      final adapter = _FixtureAdapter(
+        (_) => (status: 200, body: _fixture('analyze_image_only.json')),
+      );
+
+      final result = await DioQuestionsApi(_connection(adapter)).analyze(
+        AnalyzeRequest(
+          question: '',
+          options: const [],
+          language: 'ru',
+          provider: 'p',
+          model: 'm',
+          imagePath: file.path,
+          imageOnly: true,
+        ),
+      );
+
+      final form = adapter.requests.single.data as FormData;
+      final keys = form.fields.map((f) => f.key).toSet();
+      expect(keys, {'language', 'provider', 'model'});
+      expect(form.files.single.key, 'image');
+
+      expect(result.recognizedQuestion, 'Что такое ООП?');
+      expect(result.recognizedOptions, hasLength(2));
+      expect(result.recognizedOptions!.first.id, 'A');
+      expect(result.correctOptionIds, ['A']);
+    });
+
+    test(
+      'a response to a request with text has no recognized fields',
+      () async {
+        final adapter = _FixtureAdapter(
+          (_) => (status: 200, body: _fixture('analyze_answered.json')),
+        );
+        final result = await DioQuestionsApi(_connection(adapter))
+            .analyze(_request());
+
+        expect(result.recognizedQuestion, isNull);
+        expect(result.recognizedOptions, isNull);
+      },
+    );
+
     test('trims the question and option ids and texts', () async {
       final adapter = _FixtureAdapter(
         (_) => (status: 200, body: _fixture('analyze_answered.json')),

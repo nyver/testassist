@@ -61,6 +61,8 @@ class AnalysisResult {
     required this.provider,
     required this.model,
     this.requestId,
+    this.recognizedQuestion,
+    this.recognizedOptions,
   });
 
   final AnswerStatus status;
@@ -76,6 +78,11 @@ class AnalysisResult {
 
   /// The server request id, for support and logs.
   final String? requestId;
+
+  /// The question and options the model read from the image, when the request
+  /// carried only the image. The answer's option ids refer to these.
+  final String? recognizedQuestion;
+  final List<OptionItem>? recognizedOptions;
 
   bool get isUncertain => status == AnswerStatus.uncertain;
 }
@@ -206,8 +213,11 @@ class AnalyzeRequest {
     required this.provider,
     required this.model,
     this.imagePath,
+    this.imageOnly = false,
   });
 
+  /// An empty [question] and [options] go with [imageOnly]: the server then
+  /// reads them from the image.
   final String question;
   final List<OptionItem> options;
 
@@ -218,4 +228,7 @@ class AnalyzeRequest {
 
   /// Absolute path of the JPEG to upload, or null to send text only.
   final String? imagePath;
+
+  /// Send the image without any text. Needs [imagePath].
+  final bool imageOnly;
 }
