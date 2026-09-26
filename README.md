@@ -31,11 +31,19 @@ photo -> on-device OCR -> editable question -> your Go server (HTTPS) -> LLM -> 
 
 ```text
 cd docker
-cp .env.example .env            # put your provider key(s) into .env
-../scripts/init-volumes.sh      # creates ./data and ./certs for the container's user (UID 65532)
+cp .env.example .env                    # put your provider key(s) into .env
+cp ../config.example.yaml config.yaml   # server settings, see below
+sh ../scripts/init-volumes.sh           # creates ./data and ./certs for the container's user (UID 65532)
 docker compose up -d --build
-docker compose logs             # shows the listen address and the certificate fingerprint
+docker compose logs                     # shows the listen address and the certificate fingerprint
 ```
+
+Before starting, edit two files in `docker/`:
+
+- **`.env`**: the provider API key(s), `OPENROUTER_API_KEY` and/or `ROUTERAI_API_KEY`. A provider without a key is disabled, and the server reports "not ready" if none has one.
+- **`config.yaml`**: a copy of [`config.example.yaml`](config.example.yaml); compose mounts it into the container read-only. Every key is optional and the defaults work as they are, except one: under `tls.self_signed_hosts` list the address your phone connects to (for example `192.168.1.10`), otherwise the generated certificate does not cover it. Compose requires the file to exist, so do not skip the `cp`.
+
+`init-volumes.sh` is run with `sh` so that it works even if the executable bit was lost on checkout. It calls `sudo chown`, so it may ask for your password.
 
 On the first start the server:
 
@@ -54,11 +62,12 @@ docker compose exec test-assistant /server token show
 
 To rotate the token: `docker compose exec test-assistant /server token rotate`, then `docker compose restart`. Phones must then enter the new token.
 
-**Put your phone's address into the certificate.** If the phone connects by IP or a private name (for example `192.168.1.10`), set `tls.self_signed_hosts` in a configuration file before the first start (see [Configuration](#configuration)); a generated certificate is not regenerated later. Publicly trusted certificates (for example from Let's Encrypt behind your own domain) also work: put `server.crt` and `server.key` in `certs/`.
+**Put your phone's address into the certificate.** If the phone connects by IP or a private name (for example `192.168.1.10`), set `tls.self_signed_hosts` in `config.yaml` before the first start (see [Configuration](#configuration)); a generated certificate is not regenerated later. To change it afterwards, delete `docker/certs/server.crt` and `server.key`, then `docker compose restart`, and pair the phones again. Publicly trusted certificates (for example from Let's Encrypt behind your own domain) also work: put `server.crt` and `server.key` in `certs/`.
 
 Run without Docker:
 
 ```text
+cp config.example.yaml config.yaml      # from the repository root; edit tls.self_signed_hosts
 cd server
 go build -o test-assistant-server ./cmd/server
 OPENROUTER_API_KEY=... DATA_DIR=./data TLS_CERT_FILE=./certs/server.crt TLS_KEY_FILE=./certs/server.key \
@@ -80,7 +89,7 @@ If the certificate changes later, the app blocks the connection with "Server cer
 
 ## Configuration
 
-Precedence: built-in defaults, then an optional YAML file, then environment variables. See [`config.example.yaml`](config.example.yaml) for every key with its default. Unknown keys and invalid values stop the server at startup with a message naming the key.
+Precedence: built-in defaults, then an optional YAML file, then environment variables. See [`config.example.yaml`](config.example.yaml) for every key with its default; copy it to `config.yaml` (git-ignored) and keep only the keys you change, or leave it whole. With Docker Compose the file is `docker/config.yaml`, already wired up through `APP_CONFIG`; without Docker pass it with `-config` or `APP_CONFIG`. Inside the container the paths in the file (`/data`, `/certs`) must stay as they are, because compose mounts the volumes there. Unknown keys and invalid values stop the server at startup with a message naming the key.
 
 | Environment variable | Meaning |
 |---|---|
@@ -183,7 +192,8 @@ config.example.yaml     every server setting with its default
 
 | Symptom | Cause and fix |
 |---|---|
-| `mkdir /data ... permission denied` or `create temporary file ... is the directory writable` at startup | The bind mounts are not writable by the container user (UID 65532). Run `scripts/init-volumes.sh`, or `sudo chown -R 65532:65532 docker/data docker/certs`. |
+| `mkdir /data ... permission denied` or `create temporary file ... is the directory writable` at startup | The bind mounts are not writable by the container user (UID 65532). Run `sh scripts/init-volumes.sh`, or `sudo chown -R 65532:65532 docker/data docker/certs`. |
+| `docker compose up` fails with "not a directory", or the server reports a configuration error on `/etc/test-assistant/config.yaml` | `docker/config.yaml` did not exist when compose first ran, so Docker created a directory with that name. Run `rm -r docker/config.yaml`, then `cp config.example.yaml docker/config.yaml` and start again. |
 | Container is `unhealthy` | `docker compose logs`. The health check calls `/health/ready`, which needs a writable data directory, a loaded certificate and at least one provider with a key. Check that a key is set in `.env`. |
 | `TLS_CONFIGURATION_ERROR: ... exists but ... does not` | Only one of `server.crt` and `server.key` exists. The server never regenerates over a partial pair. Provide both, or delete the remaining file to generate a new pair. |
 | App: "Server certificate has changed. Connection blocked." | The server presents another certificate than the one you trusted (it was regenerated, replaced, or someone is intercepting). Verify the new fingerprint (`server certificate fingerprint`), then **Server settings -> Reset trusted certificate**. |

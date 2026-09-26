@@ -1,7 +1,8 @@
 # Test Assistant server.
 #
 #   cp .env.example .env        # then put your provider API keys into .env
-#   ../scripts/init-volumes.sh  # once: creates ./data and ./certs for UID 65532
+#   cp ../config.example.yaml config.yaml   # then set tls.self_signed_hosts in it
+#   sh ../scripts/init-volumes.sh           # once: creates ./data and ./certs for UID 65532
 #   docker compose up -d --build
 #
 # The first start generates a self-signed certificate and an API token. Read
@@ -29,15 +30,15 @@ services:
       ROUTERAI_API_KEY: ${ROUTERAI_API_KEY:-}
       SERVER_NAME: ${SERVER_NAME:-Test Assistant}
       APP_LISTEN_ADDR: ":8444"
+      APP_CONFIG: /etc/test-assistant/config.yaml
     volumes:
       # Persistent state: server.json and auth.json (data), the TLS
       # certificate and key (certs). Both must be writable by UID 65532.
       - ./data:/data
       - ./certs:/certs
-      # To use a configuration file, add it as a read-only mount and point
-      # APP_CONFIG at it, for example:
-      #   - ./config.yaml:/etc/test-assistant/config.yaml:ro
-      # with APP_CONFIG: /etc/test-assistant/config.yaml above.
+      # The configuration file (see the README). It must exist before the first
+      # `docker compose up`: otherwise Docker creates a directory in its place.
+      - ./config.yaml:/etc/test-assistant/config.yaml:ro
     healthcheck:
       test: ["CMD", "/server", "healthcheck"]
       interval: 30s
